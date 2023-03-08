@@ -53,18 +53,14 @@ struct WaitingQueue {
 	void push(TT&& value) {
 		// Create new node
 		std::unique_ptr<Node> node{ new Node };
-		// Additional scope to control tailMutex locking
-		{
-			//std::lock_guard<std::mutex> lck{ m_tailMutex };
-			if (m_stopped)
-				return;
-			// Push value to the current tail node
-			m_tailPtr->value = std::forward<TT>(value);
-			// Set next for the current tail
-			m_tailPtr->next = std::move(node);
-			// Change tail to the new tail (new node)
-			m_tailPtr = m_tailPtr->next.get();
-		}
+		if (m_stopped)
+			return;
+		// Push value to the current tail node
+		m_tailPtr->value = std::forward<TT>(value);
+		// Set next for the current tail
+		m_tailPtr->next = std::move(node);
+		// Change tail to the new tail (new node)
+		m_tailPtr = m_tailPtr->next.get();
 		// Notification
 		m_conditional.notify_one();
 	}
@@ -83,7 +79,6 @@ struct WaitingQueue {
 	 * */
 	void stop() {
 		std::lock_guard<std::mutex> lck1{ m_headMutex };
-		//std::lock_guard<std::mutex> lck2{ m_tailMutex };
 		m_stopped = true;
 		m_conditional.notify_all();
 	}
@@ -101,7 +96,6 @@ private:
 		 *  @note This function is thread-safe
 		 */
 	Node* tail() {
-		//std::lock_guard<std::mutex> lck{ m_tailMutex };
 		return m_tailPtr;
 	}
 
@@ -162,8 +156,6 @@ private:
 	std::mutex m_headMutex;
 	// Head element pointer
 	std::unique_ptr<Node> m_headPtr;
-	// Mutex for the tail element of the WaitingQueue
-	std::mutex m_tailMutex;
 	// Raw pointer to the tail element
 	Node* m_tailPtr;
 	// Condition for waiting data
