@@ -55,7 +55,7 @@ struct WaitingQueue {
 		std::unique_ptr<Node> node{ new Node };
 		// Additional scope to control tailMutex locking
 		{
-			std::lock_guard<std::mutex> lck{ m_tailMutex };
+			//std::lock_guard<std::mutex> lck{ m_tailMutex };
 			if (m_stopped)
 				return;
 			// Push value to the current tail node
@@ -83,7 +83,7 @@ struct WaitingQueue {
 	 * */
 	void stop() {
 		std::lock_guard<std::mutex> lck1{ m_headMutex };
-		std::lock_guard<std::mutex> lck2{ m_tailMutex };
+		//std::lock_guard<std::mutex> lck2{ m_tailMutex };
 		m_stopped = true;
 		m_conditional.notify_all();
 	}
@@ -101,7 +101,7 @@ private:
 		 *  @note This function is thread-safe
 		 */
 	Node* tail() {
-		std::lock_guard<std::mutex> lck{ m_tailMutex };
+		//std::lock_guard<std::mutex> lck{ m_tailMutex };
 		return m_tailPtr;
 	}
 
@@ -169,5 +169,5 @@ private:
 	// Condition for waiting data
 	std::condition_variable m_conditional;
 	// Stop flag
-	bool m_stopped;
+	std::atomic<bool> m_stopped;
 };
